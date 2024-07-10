@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Navbar and Cards Example</title>
+    <title>Home page </title>
     <style>
         /* Internal CSS Styles */
         body {
@@ -61,27 +61,28 @@
 <body>
     <!-- Navigation Bar -->
     <div class="navbar">
-        <a href="#">Home</a>
-        <a href="#">About</a>
+        <a href="./homepage ">Home</a>
+        <a href="myblog">myblog</a>
         <a href="#">Services</a>
-        <a href="#">Contact</a>
+        <a href="">form</a>
+        <a href="">blog</a>
+        <a href="../about">about</a>
     </div>
 
-   <div style="display: flex;">
+   <div style="display: flex;flex-wrap: wrap;">
      <!-- Cards Section -->
-      <%  blogs.forEach((blog)=>{%>
+      <%  blogs.forEach((blog)=>{ %>
      <div class="card" >
         <img src="<%-blog.image%>" alt="Card Image">
-        <div class="title">Card 1 Title</div>
+        <div class="title"><%-blog.title%></div>
+        <a href="./blogs/"<% blog._id   %>></a>
+        <a  href ="/blogs/<%-blog._id  %>"> see more </a>
     </div>
 
    <% })%>
 
 
-    <div class="card">
-        <img src="https://via.placeholder.com/300x200" alt="Card Image">
-        <div class="title">Card 2 Title</div>
-    </div>
+   
    </div>
 
   
