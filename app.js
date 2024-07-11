@@ -113,37 +113,39 @@ const User = require("./model/registerModel.js");
 app.get("/register", (req, res) => {
   res.render("authentication/register.ejs");
 });
+app.get("/login", (req, res) => {
+  res.render("authentication/login.ejs");
+});
 app.post("/register", async (req, res) => {
   // const filename = req.file.filename;
   const { username, password, email } = req.body;
   console.log(username, password, email);
-  const user = await User.create({
+   await User.create({
     username,
     email,
     password: bcrypt.hashSync(password, 12),
   });
-  res.status(201).json({
-    success: true,
-    data: user,
-    message: "Registered",
-  });
-  // res.redirect("/");
+  // res.status(201).json({
+  //   success: true,
+  //   data: user,
+  //   message: "Registered",
+  // });
+  res.redirect("/login");
 });
 
-app.get("/login", (req, res) => {
-  res.render("authentication/login.ejs");
-});
+
 
 app.post("/login", async (req, res) => {
-  const { username,email, password } = req.body;
-  const data = await User.find({ email, password });
-  if (data.length == 0) {
+  const { email, password } = req.body;
+  const userdata = await User.findOne({ email, });
+  /*The findOne method returns a single document or null, not an array, so you don't need to check .length or access it like an array.*/
+  if (!userdata ) {
     res.send("invalid user");
   } else {
     //check password
-    const ismatched = bcrypt.compareSync(password, user[0].password);
+    const ismatched = bcrypt.compareSync(password, userdata.password);
     if (!ismatched) {
-      res.send("invslid pappppa");
+      res.send("invalid pappppa");
     } else {
       res.send("login sucessfully ");
     }
