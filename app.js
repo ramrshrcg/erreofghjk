@@ -1,14 +1,20 @@
+require("dotenv").config();
 const express = require("express");
 const connectToDb = require("./database/databaseConnection.js");
 const Blog = require("./model/blogModel.js");
 const app = express();
+const jwt = require("jsonwebtoken");
+const isAuthenticated = require("./middleware/isAuthenticated.js");
+const cookieParser= require('cookie-parser')
 
 const bcrypt = require("bcrypt");
 // require("./middleware/multerconfig.js").multer
 const { multer, storage } = require("./middleware/multerconfig.js");
 const upload = multer({ storage: storage });
 
+
 connectToDb();
+app.use(cookieParser())
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -36,7 +42,7 @@ app.get("/contact", (req, res) => {
   res.render("blogs/contact.ejs");
 });
 
-app.get("/createblog", (req, res) => {
+app.get("/createblog",isAuthenticated, (req, res) => {
   res.render("createblog.ejs");
 });
 
@@ -120,7 +126,7 @@ app.post("/register", async (req, res) => {
   // const filename = req.file.filename;
   const { username, password, email } = req.body;
   console.log(username, password, email);
-   await User.create({
+  await User.create({
     username,
     email,
     password: bcrypt.hashSync(password, 12),
@@ -133,21 +139,26 @@ app.post("/register", async (req, res) => {
   res.redirect("/login");
 });
 
-
-
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
-  const userdata = await User.findOne({ email, });
+  // const userdata = await User.findone({ email, });
+  const user = await User.find({ email });
+
+  // Use .find when you expect multiple documents to match the query (e.g., retrieving all users from a particular city).
   /*The findOne method returns a single document or null, not an array, so you don't need to check .length or access it like an array.*/
-  if (!userdata ) {
-    res.send("invalid user");
+  if (user.length === 0) {
+    res.send("invalid email");
   } else {
     //check password
-    const ismatched = bcrypt.compareSync(password, userdata.password);
-    if (!ismatched) {
-      res.send("invalid pappppa");
+    const isMatched = bcrypt.compareSync(password, user[0].password);
+    if (!isMatched) {
+      res.send("Invalid password");
     } else {
-      res.send("login sucessfully ");
+      const token = jwt.sign({ userId: user[0]._id }, process.env.SECRET, {
+        expiresIn: "20d",
+      });
+      res.cookie("token", token)
+      res.send("logged in successfully");
     }
   }
 });
