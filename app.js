@@ -6,22 +6,38 @@ const app = express();
 const jwt = require("jsonwebtoken");
 const isAuthenticated = require("./middleware/isAuthenticated.js");
 const cookieParser= require('cookie-parser')
-
 const bcrypt = require("bcrypt");
-// require("./middleware/multerconfig.js").multer
+const User = require("./model/registerModel.js");
 const { multer, storage } = require("./middleware/multerconfig.js");
 const upload = multer({ storage: storage });
 
+connectToDb();  
 
-connectToDb();
 app.use(cookieParser())
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.set("view engine ", "ejs");
 
 app.use(express.static("./storage"));
+
+// Middleware to pass user status to views
+app.use(async (req, res, next) => {
+  const token = req.cookies.token;
+  if (token) {
+      try {
+          const decoded = jwt.verify(token, process.env.SECRET);
+          const user = await User.findById(decoded.userId);
+          if (user) {
+              req.user = { userId: decoded.userId, username: user.username };
+          }
+      } catch (err) {
+          res.clearCookie("token");
+      }
+  }
+  res.locals.user = req.user;
+  next();
+});
 
 app.get("/", async (req, res) => {
   const blogs = await Blog.find(); //alwYS REturns array
@@ -34,8 +50,9 @@ app.get("/about", (req, res) => {
   const name = "ramesh";
   res.render("about.ejs", { name: name });
 });
-app.get("/edit", (req, res) => {
-  res.render("blogs/editblog.ejs");
+app.get("/edit",async (req, res) => {
+  const blog=await Blog.find()
+  res.render("blogs/editblog.ejs",{blog});
 });
 
 app.get("/contact", (req, res) => {
@@ -55,9 +72,10 @@ app.post("/createblog", upload.single("image"), async (req, res) => {
     subtitle,
     description,
     image: filename,
+    author: req.user.username,
   });
-  res.send("blog maded  sucessfully");
-  // res.redirect("/");
+  //res.send("blog maded  sucessfully");
+   res.redirect("/");
 });
 
 app.get("/blog/:id", async (req, res) => {
@@ -68,13 +86,24 @@ app.get("/blog/:id", async (req, res) => {
 
 app.get("/deleteblog/:id", async (req, res) => {
   const id = req.params.id;
+  const blog = await Blog.findById(id);
 
-  const remove = await Blog.findByIdAndDelete(id);
+  if (!blog || blog.author !== req.user.username) {
+    return res.status(403).send("You are not authorized to delete this blog.");
+  }
+  await Blog.findByIdAndDelete(id);
+
+
   res.redirect("/");
 });
 app.get("/editblog/:id", async (req, res) => {
   const id = req.params.id;
   const blog = await Blog.findById(id);
+
+  if (!blog || blog.author !== req.user.username) {
+    return res.status(403).send("You are not authorized to edit this blog.");
+}
+
   res.render("./blogs/editblog.ejs", { blog });
 });
 
@@ -91,6 +120,7 @@ app.post("/editblog/:id", async (req, res) => {
   res.redirect("/singlepage/" + id);
 });
 
+// 
 /*/*/ /* */ /////////////////////////** *////////////////
 // app.get("/myblog", async (req, res) => {
 //   const myblog = await Blog.find({});
@@ -104,19 +134,19 @@ app.get("/singlepage/:id", async (req, res) => {
   res.render("blogs/singlepage.ejs", { blog });
 });
 
-// app.get("/home", async (req, res) => {
-// const blogs = await Blog.find();
-// console.log(blogs);
-// res.render("blogs/homepage.ejs", { blogs: blogs });
-// });
+app.get("/home", async (req, res) => {
+const blogs = await Blog.find();
+console.log(blogs);
+res.render("blogs/homepage.ejs", { blogs: blogs });
+});
 
-// app.get("/form", (req, res) => {
-//   res.render("form.ejs");
-// });//
+app.get("/form", (req, res) => {
+  res.render("form.ejs");
+});//
 
-const User = require("./model/registerModel.js");
 
 app.get("/register", (req, res) => {
+
   res.render("authentication/register.ejs");
 });
 app.get("/login", (req, res) => {
@@ -158,10 +188,16 @@ app.post("/login", async (req, res) => {
         expiresIn: "20d",
       });
       res.cookie("token", token)
-      res.send("logged in successfully");
+      // res.send("logged in successfully");
+      res.redirect("/home")
     }
   }
 });
+app.get("/logout", (req, res) => {
+  res.clearCookie("token");
+  res.redirect("/");
+}); 
+
 
 app.listen(3000, () => {
   console.log("node has started at " + 3000 + " port ");

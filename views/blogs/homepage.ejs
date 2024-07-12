@@ -54,18 +54,20 @@
         font-size: 18px;
         margin-top: 10px;
       }
+      .auth-links {
+        float: right;
+      }
+
+      .auth-links a {
+        float: none;
+        display: inline-block;
+      }
     </style>
   </head>
 
   <body>
-    <!-- Navigation Bar -->
-    <div class="navbar">
-      <a href="./homepage ">Home</a>
-      <a href="myblog">myblog</a>
-      <a href="#">Services</a>
-      <a href="">form</a>
-      <a href="">blog</a>
-      <a href="../about">about</a>
+    <%- include("../componet/navbar.ejs")%>
+ 
     </div>
 
     <div style="display: flex; flex-wrap: wrap">

@@ -5,7 +5,7 @@ const promisify = require("util").promisify
 
 const isAuthenticated= (req, res,next)=>{
     const token=req.cookies.token
-    // console.log()
+    console.log(token)
     if(!token|| token== null)
     {
         return res.send("please login")
