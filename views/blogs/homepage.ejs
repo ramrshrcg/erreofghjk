@@ -69,6 +69,14 @@
     <%- include("../componet/navbar.ejs")%>
  
     </div>
+      <!-- Search Form -->
+      <div class="search-form">
+        <form action="/search" method="GET">
+            <input type="text" name="query" placeholder="Search blogs...">
+            <button type="submit">Search</button>
+        </form>
+    </div>
+
 
     <div style="display: flex; flex-wrap: wrap">
       <!-- Cards Section -->

@@ -107,6 +107,7 @@ app.get("/editblog/:id", async (req, res) => {
   res.render("./blogs/editblog.ejs", { blog });
 });
 
+
 app.post("/editblog/:id", async (req, res) => {
   const id = req.params.id;
   // const title = req.params.title;
@@ -117,7 +118,24 @@ app.post("/editblog/:id", async (req, res) => {
     subtitle: subtitle,
     description: description,
   });
-  res.redirect("/singlepage/" + id);
+  res.redirect("/singlepage/" + id);  
+});
+app.get("/search", async (req, res) => {
+  const query = req.query.query;
+  if (!query) {
+      return res.redirect("/");
+  }
+
+  const blogs = await Blog.find({
+      $or: [
+          { title: new RegExp(query, 'i') },
+          { subtitle: new RegExp(query, 'i') },
+          { description: new RegExp(query, 'i') },
+          { author: new RegExp(query, 'i') }
+      ]
+  });
+
+  res.render("search.ejs", { blogs: blogs, query: query });
 });
 
 // 
